@@ -17,6 +17,7 @@ import CompareModal from './CompareModal';
 import LoadingAnimation from './LoadingAnimation';
 import Alert from './Alert';
 import CopyUrlModal from './CopyUrlModal';
+import Footer from './Footer';
 import { useGpuRecommendations } from '../hooks/useGpuRecommendations';
 
 const Results: React.FC = () => {
@@ -85,12 +86,12 @@ const Results: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-void p-4 font-sans">
-        <div className="bg-surface border border-border p-10 text-center max-w-md w-full animate-in fade-in zoom-in duration-500">
-            <div className="flex justify-center mb-8">
-              <LoadingAnimation size={180} />
+        <div className="bg-surface border border-border p-8 md:p-10 text-center max-w-md w-full animate-in fade-in zoom-in duration-500">
+            <div className="flex justify-center mb-6 md:mb-8">
+              <LoadingAnimation size={160} />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3 tracking-tight font-mono">[SCANNING]</h2>
-            <p className="text-text-muted leading-relaxed mb-8">Analyzing parameters and querying compute marketplace...</p>
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-3 tracking-tight font-mono">[SCANNING]</h2>
+            <p className="text-text-muted leading-relaxed mb-6 md:mb-8 text-sm md:text-base">Analyzing parameters and querying compute marketplace...</p>
             <div className="inline-flex items-center gap-2 border border-border bg-surface-light px-4 py-2 text-xs font-mono text-ice-cyan uppercase tracking-wide">
                 <Icon name="globe" size={ICON_SIZES.XS} className="text-ice-cyan" />
                 <span>[LIVE_DATA]</span>
@@ -103,29 +104,40 @@ const Results: React.FC = () => {
   // Error State
   if (error || !recommendation) {
      return (
-        <div className="min-h-screen flex items-center justify-center bg-void font-sans">
-            <div className="text-center p-8 max-w-lg">
-                <div className="border-2 border-border text-ice-cyan w-20 h-20 flex items-center justify-center mx-auto mb-6">
+        <div className="min-h-screen flex items-center justify-center bg-void font-sans p-4">
+            <div className="text-center p-6 md:p-8 max-w-lg animate-in fade-in zoom-in duration-500">
+                <div className="border-2 border-border text-ice-cyan w-16 h-16 md:w-20 md:h-20 flex items-center justify-center mx-auto mb-6">
                     <Icon name="info" size={ICON_SIZES.HUGE} />
                 </div>
-                <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">[ERROR]</h2>
-                <p className="text-text-muted text-lg mb-8">{error || "We could not find a suggestion this time."}</p>
-                <Link to="/" className="inline-flex items-center gap-2 border border-ice-cyan bg-surface text-ice-cyan px-6 py-3 font-semibold hover:bg-surface-light transition-colors cyber-glow font-mono text-sm">
-            <Icon name="arrow-left" size={ICON_SIZES.LG} /> <span>[RESTART]</span>
-                </Link>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight font-mono">[ERROR]</h2>
+                <p className="text-text-muted text-base md:text-lg mb-6 md:mb-8 leading-relaxed">{error || "We could not find a suggestion this time."}</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="inline-flex items-center gap-2 border border-ice-cyan bg-surface text-ice-cyan px-6 py-3 font-semibold hover:bg-surface-light transition-colors cyber-glow font-mono text-sm active:scale-95 touch-manipulation min-h-[44px]"
+                    aria-label="Retry loading recommendations"
+                  >
+                    <Icon name="loader" size={ICON_SIZES.LG} className="animate-spin" />
+                    <span>[RETRY]</span>
+                  </button>
+                  <Link to="/" className="inline-flex items-center gap-2 border border-border bg-surface-light text-text-muted px-6 py-3 font-semibold hover:bg-surface hover:text-ice-cyan transition-colors font-mono text-sm active:scale-95 touch-manipulation min-h-[44px]">
+                    <Icon name="arrow-left" size={ICON_SIZES.LG} /> <span>[RESTART]</span>
+                  </Link>
+                </div>
             </div>
         </div>
     );
   }
 
   return (
-    <div className="min-h-screen pb-24 bg-void font-sans">
+    <div className="min-h-screen flex flex-col bg-void font-sans">
       {/* Header */}
       <header className="bg-surface border-b border-border sticky top-0 z-30 transition-all">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
           <Link
             to="/"
-            className="flex items-center gap-2 text-text-muted hover:text-ice-cyan transition-colors px-3 py-1.5 hover:bg-surface-light font-mono text-sm"
+            className="flex items-center gap-2 text-text-muted hover:text-ice-cyan transition-colors px-3 py-1.5 hover:bg-surface-light font-mono text-sm active:scale-95 touch-manipulation min-h-[44px]"
+            aria-label="Restart questionnaire"
           >
             <Icon name="arrow-left" size={ICON_SIZES.XL} />
             <span>[RESTART]</span>
@@ -142,11 +154,12 @@ const Results: React.FC = () => {
                 </span>
               </div>
             </div>
-            <button
-              onClick={copyLink}
-              className="relative p-2.5 text-text-muted hover:text-ice-cyan hover:bg-surface-light transition-all border border-transparent hover:border-border"
-              title="Share configuration"
-            >
+          <button
+            onClick={copyLink}
+            className="relative p-2.5 text-text-muted hover:text-ice-cyan hover:bg-surface-light transition-all border border-transparent hover:border-border active:scale-95 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            title="Share configuration"
+            aria-label="Copy link to share configuration"
+          >
               <Icon name="external-link" size={ICON_SIZES.XL} />
               {hasCopiedLink && (
                 <span className="absolute right-0 -bottom-7 translate-x-2 whitespace-nowrap border border-ice-cyan bg-surface text-ice-cyan text-[10px] font-mono px-2 py-1 cyber-glow">
@@ -236,18 +249,18 @@ const Results: React.FC = () => {
           </div>
 
           <div className="bg-surface border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto scrollbar-hide">
+              <table className="w-full text-left border-collapse min-w-[640px]">
                 <thead>
                   <tr className="bg-surface-light border-b border-border text-xs font-mono text-ice-cyan uppercase tracking-wider">
-                    <th className="px-4 py-5 w-16 text-center">
+                    <th className="px-3 md:px-4 py-4 md:py-5 w-12 md:w-16 text-center">
                         <Icon name="layers" size={ICON_SIZES.MD} className="mx-auto text-ice-cyan" />
                     </th>
-                    <th className="px-6 py-5">[PROVIDER]</th>
-                    <th className="px-6 py-5">[SPECS]</th>
-                    <th className="px-6 py-5">[REGION]</th>
-                    <th className="px-6 py-5">[PRICE/HR]</th>
-                    <th className="px-6 py-5 text-right">[ACTION]</th>
+                    <th className="px-4 md:px-6 py-4 md:py-5">[PROVIDER]</th>
+                    <th className="px-4 md:px-6 py-4 md:py-5">[SPECS]</th>
+                    <th className="px-4 md:px-6 py-4 md:py-5 hidden sm:table-cell">[REGION]</th>
+                    <th className="px-4 md:px-6 py-4 md:py-5">[PRICE/HR]</th>
+                    <th className="px-4 md:px-6 py-4 md:py-5 text-right">[ACTION]</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -256,18 +269,19 @@ const Results: React.FC = () => {
                     const isSelected = selectedOffers.has(offer.id);
                     return (
                       <tr key={offer.id} className={`transition-all duration-200 group ${isSelected ? 'bg-surface-light cyber-glow' : 'hover:bg-surface-light'}`}>
-                        <td className="px-4 py-5 text-center">
+                        <td className="px-3 md:px-4 py-4 md:py-5 text-center">
                             <input 
                                 type="checkbox" 
                                 checked={isSelected}
                                 onChange={() => toggleComparison(offer.id)}
-                                className="w-5 h-5 border-border bg-surface text-ice-cyan focus:ring-ice-cyan cursor-pointer transition-all accent-ice-cyan"
+                                className="w-5 h-5 md:w-6 md:h-6 border-border bg-surface text-ice-cyan focus:ring-2 focus:ring-ice-cyan cursor-pointer transition-all accent-ice-cyan hover:scale-110 active:scale-95 touch-manipulation"
+                                aria-label={`${isSelected ? 'Deselect' : 'Select'} ${offer.providerName} for comparison`}
                             />
                         </td>
-                        <td className="px-6 py-5">
+                        <td className="px-4 md:px-6 py-4 md:py-5">
                           <div className="flex items-center gap-2.5">
                             <span className="font-mono text-xs text-ice-cyan/60">[{String(idx + 1).padStart(2, '0')}]</span>
-                            <span className="font-bold text-white text-base">{offer.providerName}</span>
+                            <span className="font-bold text-white text-sm md:text-base">{offer.providerName}</span>
                             {offer.isVerified && (
                               <div className="text-ice-cyan" title="Found via Search">
                                 <Icon name="check" size={ICON_SIZES.SM} strokeWidth={STROKE_WIDTH.THICK} />
@@ -276,8 +290,8 @@ const Results: React.FC = () => {
                           </div>
                           <div className="text-xs text-text-muted mt-1 font-mono uppercase tracking-wide">{offer.commitment.toUpperCase()}</div>
                         </td>
-                        <td className="px-6 py-5">
-                          <div className="font-semibold text-white flex items-center gap-2">
+                        <td className="px-4 md:px-6 py-4 md:py-5">
+                          <div className="font-semibold text-white flex items-center gap-2 text-sm md:text-base">
                             <Icon name="cpu" size={ICON_SIZES.MD} className="text-ice-cyan" />
                             {gpu.name}
                           </div>
@@ -286,18 +300,18 @@ const Results: React.FC = () => {
                              <div className="text-[10px] font-mono text-ice-cyan/80 bg-surface-light px-2 py-0.5 border border-border">{gpu.fp16Tflops} TFLOPS</div>
                           </div>
                         </td>
-                        <td className="px-6 py-5 text-text-muted text-sm font-mono uppercase">
+                        <td className="px-4 md:px-6 py-4 md:py-5 text-text-muted text-sm font-mono uppercase hidden sm:table-cell">
                           {offer.region}
                         </td>
-                        <td className="px-6 py-5">
-                          <div className="font-extrabold text-ice-cyan text-lg tracking-tight font-mono">${offer.pricePerHour.toFixed(LIMITS.PRICE_DECIMAL_PLACES)}</div>
+                        <td className="px-4 md:px-6 py-4 md:py-5">
+                          <div className="font-extrabold text-ice-cyan text-base md:text-lg tracking-tight font-mono">${offer.pricePerHour.toFixed(LIMITS.PRICE_DECIMAL_PLACES)}</div>
                         </td>
-                        <td className="px-6 py-5 text-right">
+                        <td className="px-4 md:px-6 py-4 md:py-5 text-right">
                           <a 
                             href={offer.url} 
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 border border-ice-cyan bg-surface text-ice-cyan px-5 py-2.5 text-sm font-semibold hover:bg-surface-light hover:cyber-glow transition-all whitespace-nowrap font-mono"
+                            className="inline-flex items-center gap-2 border border-ice-cyan bg-surface text-ice-cyan px-5 py-2.5 text-sm font-semibold hover:bg-surface-light hover:cyber-glow transition-all whitespace-nowrap font-mono active:scale-95 touch-manipulation min-h-[44px]"
                           >
                             [VIEW] <Icon name="external-link" size={ICON_SIZES.SM} />
                           </a>
@@ -330,7 +344,8 @@ const Results: React.FC = () => {
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 animate-in slide-in-from-bottom-10 fade-in duration-300">
           <button 
             onClick={() => setIsCompareOpen(true)}
-            className="group border border-ice-cyan bg-surface text-ice-cyan pl-6 pr-8 py-4 hover:bg-surface-light transition-all flex items-center gap-4 font-bold cyber-glow hover:cyber-glow-strong font-mono"
+            className="group border border-ice-cyan bg-surface text-ice-cyan pl-6 pr-8 py-4 hover:bg-surface-light transition-all flex items-center gap-4 font-bold cyber-glow hover:cyber-glow-strong font-mono active:scale-95 touch-manipulation min-h-[48px]"
+            aria-label={`Compare ${selectedOffers.size} selected offers`}
           >
             <span className="border border-ice-cyan bg-surface-light text-ice-cyan w-6 h-6 flex items-center justify-center text-xs font-mono">{selectedOffers.size}</span>
             <span className="flex items-center gap-2">[COMPARE] <Icon name="arrow-right" size={ICON_SIZES.MD} className="group-hover:translate-x-1 transition-transform" /></span>
@@ -372,6 +387,7 @@ const Results: React.FC = () => {
           gpuSpecs={gpuSpecs}
         />
       )}
+      <Footer />
     </div>
   );
 };

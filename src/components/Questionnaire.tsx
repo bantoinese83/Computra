@@ -11,6 +11,8 @@ const Questionnaire: React.FC = () => {
   const { stepId } = useParams();
   const firstOptionRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   // Determine current step index with validation
   const rawIndex = stepId ? Number.parseInt(stepId, 10) - 1 : 0;
@@ -26,6 +28,9 @@ const Questionnaire: React.FC = () => {
 
   // Auto-focus first option and scroll to top on step change
   useEffect(() => {
+    // Reset option refs array
+    optionRefs.current = [];
+    setIsNavigating(false);
     // Smooth scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // Focus first option after a brief delay for smooth transition
@@ -38,17 +43,35 @@ const Questionnaire: React.FC = () => {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isNavigating) return;
+      
       if (e.key === 'Escape' && stepIndex > 0) {
         navigate(`/step/${stepIndex}?${searchParams.toString()}`);
+        return;
+      }
+
+      // Arrow key navigation between options
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const currentIndex = optionRefs.current.findIndex(
+          (ref) => ref === document.activeElement
+        );
+        const nextIndex = e.key === 'ArrowDown' 
+          ? (currentIndex + 1) % currentStepDef.options.length
+          : (currentIndex - 1 + currentStepDef.options.length) % currentStepDef.options.length;
+        
+        optionRefs.current[nextIndex]?.focus();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [stepIndex, navigate, searchParams]);
+  }, [stepIndex, navigate, searchParams, isNavigating, currentStepDef]);
 
   // Helper to update state in URL
   const handleSelect = (value: string) => {
-    if (!currentStepDef) return;
+    if (!currentStepDef || isNavigating) return;
+    
+    setIsNavigating(true);
     const newParams = new URLSearchParams(searchParams);
     newParams.set(currentStepDef.id, value);
     setSearchParams(newParams);
@@ -59,6 +82,9 @@ const Questionnaire: React.FC = () => {
     } else {
       navigate(`/results?${newParams.toString()}`);
     }
+    
+    // Reset navigation lock after a brief delay
+    setTimeout(() => setIsNavigating(false), 500);
   };
 
   // Get current selection for this step if it exists
@@ -68,7 +94,8 @@ const Questionnaire: React.FC = () => {
   if (!currentStepDef) return null;
 
   return (
-    <div className="min-h-screen bg-void relative overflow-hidden flex flex-col items-center pt-16 px-4 font-sans">
+    <div className="min-h-screen bg-void relative overflow-hidden flex flex-col items-center pt-8 md:pt-16 px-4 pb-8 font-sans">
+      <div className="flex-1 w-full max-w-4xl mb-8 mx-auto animate-in fade-in duration-300">
       {/* Brand */}
       <div className="mb-12 text-center z-10 space-y-4">
         <div className="flex justify-center">
@@ -87,7 +114,7 @@ const Questionnaire: React.FC = () => {
       {/* Question Card */}
       <div 
         ref={cardRef}
-        className="w-full max-w-2xl bg-surface border border-border overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500"
+        className="w-full max-w-2xl mx-auto bg-surface border border-border overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500 shadow-lg"
         role="region"
         aria-labelledby="question-title"
       >
@@ -102,14 +129,17 @@ const Questionnaire: React.FC = () => {
               <h2 id="question-title" className="text-2xl md:text-3xl font-bold text-white tracking-tight">{currentStepDef.title}</h2>
               {currentStepDef.tooltip && (
                 <div className="group relative">
-                  <Icon
-                    name="help"
-                    className="text-text-muted hover:text-ice-cyan transition-colors cursor-help"
-                    size={ICON_SIZES.XXL}
-                    aria-label="Help"
-                    role="button"
-                    tabIndex={0}
-                  />
+                  <button
+                    type="button"
+                    className="text-text-muted hover:text-ice-cyan transition-colors cursor-help focus:outline-none focus:ring-2 focus:ring-ice-cyan focus:ring-offset-2 focus:ring-offset-surface rounded p-1"
+                    aria-label="Show help information"
+                    aria-expanded="false"
+                  >
+                    <Icon
+                      name="help"
+                      size={ICON_SIZES.XXL}
+                    />
+                  </button>
                   <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 w-72 p-4 bg-surface-light border border-border text-white text-sm leading-relaxed opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-200 z-20 pointer-events-none cyber-glow">
                     {currentStepDef.tooltip}
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-surface-light border-l border-b border-border rotate-45"></div>
@@ -118,6 +148,9 @@ const Questionnaire: React.FC = () => {
               )}
             </div>
             <p className="text-text-muted leading-relaxed">{currentStepDef.description}</p>
+            <p className="text-text-muted/60 text-xs mt-3 font-mono hidden sm:block">
+              [TIP] Use ↑↓ arrow keys to navigate options
+            </p>
           </div>
 
           {/* Options Grid */}
@@ -128,19 +161,26 @@ const Questionnaire: React.FC = () => {
               return (
                 <button
                   key={optionKey}
-                  ref={idx === 0 ? firstOptionRef : undefined}
+                  ref={(el) => {
+                    if (idx === 0) firstOptionRef.current = el;
+                    optionRefs.current[idx] = el;
+                  }}
                   onClick={() => handleSelect(optionKey)}
+                  disabled={isNavigating}
                   onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       handleSelect(optionKey);
                     }
                   }}
-                  className={`relative w-full text-left p-5 border transition-all duration-200 ease-out group focus:outline-none focus:ring-2 focus:ring-ice-cyan focus:ring-offset-2 focus:ring-offset-void
+                  className={`relative w-full text-left p-5 md:p-6 border transition-all duration-200 ease-out group focus:outline-none focus:ring-2 focus:ring-ice-cyan focus:ring-offset-2 focus:ring-offset-void
                     ${isActive 
                       ? 'border-ice-cyan bg-surface-light cyber-glow z-10' 
                       : 'border-border bg-surface hover:border-ice-cyan/50 hover:bg-surface-light active:scale-[0.98]'
-                    }`}
+                    }
+                    ${isNavigating ? 'opacity-75 cursor-wait' : 'cursor-pointer'}
+                    touch-manipulation
+                  `}
                   role="radio"
                   aria-checked={isActive}
                   aria-label={optionKey}
@@ -180,7 +220,8 @@ const Questionnaire: React.FC = () => {
           {stepIndex > 0 ? (
             <button 
               onClick={() => navigate(`/step/${stepIndex}?${searchParams.toString()}`)}
-              className="group text-text-muted hover:text-ice-cyan font-semibold text-sm flex items-center gap-2 transition-colors px-2 py-1 hover:bg-surface"
+              className="group text-text-muted hover:text-ice-cyan font-semibold text-sm flex items-center gap-2 transition-colors px-3 py-2 hover:bg-surface active:scale-95 touch-manipulation min-h-[44px] min-w-[44px]"
+              aria-label="Go back to previous step"
             >
               <Icon name="arrow-left" size={ICON_SIZES.MD} className="transition-transform group-hover:-translate-x-1" />
               <span className="font-mono">[BACK]</span>
@@ -192,6 +233,7 @@ const Questionnaire: React.FC = () => {
             [{String(stepIndex + 1).padStart(2, '0')}/{String(STEPS.length).padStart(2, '0')}]
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
