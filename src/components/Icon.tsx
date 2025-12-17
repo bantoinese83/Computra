@@ -19,6 +19,9 @@ import {
   Layers,
   Search,
   Cpu,
+  AlertTriangle,
+  XCircle,
+  Copy,
 } from 'lucide-react';
 
 export type IconName =
@@ -39,7 +42,11 @@ export type IconName =
   | 'info'
   | 'layers'
   | 'search'
-  | 'cpu';
+  | 'cpu'
+  | 'x'
+  | 'alert-triangle'
+  | 'x-circle'
+  | 'copy';
 
 const ICONS: Record<IconName, LucideIcon> = {
   'arrow-left': ArrowLeft,
@@ -60,6 +67,10 @@ const ICONS: Record<IconName, LucideIcon> = {
   layers: Layers,
   search: Search,
   cpu: Cpu,
+  x: X,
+  'alert-triangle': AlertTriangle,
+  'x-circle': XCircle,
+  copy: Copy,
 };
 
 export interface IconProps extends React.SVGProps<SVGSVGElement> {

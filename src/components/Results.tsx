@@ -15,6 +15,8 @@ import { Logo } from './Logo';
 import GeminiAssistant from './GeminiAssistant';
 import CompareModal from './CompareModal';
 import LoadingAnimation from './LoadingAnimation';
+import Alert from './Alert';
+import CopyUrlModal from './CopyUrlModal';
 import { useGpuRecommendations } from '../hooks/useGpuRecommendations';
 
 const Results: React.FC = () => {
@@ -22,6 +24,8 @@ const Results: React.FC = () => {
   const [selectedOffers, setSelectedOffers] = useState<Set<string>>(new Set());
   const [hasCopiedLink, setHasCopiedLink] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [alert, setAlert] = useState<{ message: string; type: 'info' | 'warning' | 'error' } | null>(null);
+  const [showCopyModal, setShowCopyModal] = useState(false);
 
   // Reconstruct state from URL
   const prefs: UserPreferences = {
@@ -51,8 +55,8 @@ const Results: React.FC = () => {
       setHasCopiedLink(true);
       window.setTimeout(() => setHasCopiedLink(false), TIMEOUTS.COPY_LINK_FEEDBACK);
     } else {
-      // Fallback: select URL for manual copy
-      window.prompt('Copy this link:', url);
+      // Fallback: show styled modal for manual copy
+      setShowCopyModal(true);
     }
   };
 
@@ -62,7 +66,10 @@ const Results: React.FC = () => {
       next.delete(id);
     } else {
       if (next.size >= LIMITS.MAX_COMPARISON_OFFERS) {
-        alert(`You can compare up to ${LIMITS.MAX_COMPARISON_OFFERS} offers at a time.`);
+        setAlert({ 
+          message: `You can compare up to ${LIMITS.MAX_COMPARISON_OFFERS} offers at a time.`, 
+          type: 'warning' 
+        });
         return;
       }
       next.add(id);
@@ -338,6 +345,23 @@ const Results: React.FC = () => {
         isOpen={isCompareOpen} 
         onClose={() => setIsCompareOpen(false)} 
       />
+
+      {/* Alert Notification */}
+      {alert && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert(null)}
+        />
+      )}
+
+      {/* Copy URL Modal */}
+      {showCopyModal && (
+        <CopyUrlModal
+          url={window.location.href}
+          onClose={() => setShowCopyModal(false)}
+        />
+      )}
 
       {/* Gemini Assistant Integration */}
       {recommendation && (
