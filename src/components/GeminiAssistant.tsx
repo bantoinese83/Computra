@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Icon } from './Icon';
 import { GoogleGenAI } from "@google/genai";
-import { RecommendationResult, UserPreferences } from '../types';
+import { RecommendationResult, UserPreferences, ProviderOffer, GpuSpec } from '../types';
 import { LIMITS, ICON_SIZES, SPACING, PERCENTAGE } from '../constants';
 import { logger } from '../utils/logger';
 import LoadingAnimation from './LoadingAnimation';
@@ -9,12 +9,25 @@ import LoadingAnimation from './LoadingAnimation';
 interface Props {
   recommendation: RecommendationResult;
   preferences: UserPreferences;
+  offers: ProviderOffer[];
+  gpuSpecs: Record<string, GpuSpec>;
 }
 
-const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences }) => {
+const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences, offers, gpuSpecs }) => {
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Initialize with context-aware message
+  const getInitialMessage = () => {
+    if (offers.length > 0) {
+      const topOffer = offers[0];
+      const gpuName = gpuSpecs[topOffer.gpuId]?.name || topOffer.gpuId;
+      return `[NOVA_INIT] I'm Nova, your compute copilot. I've analyzed your workload and found ${offers.length} provider offers. The top recommendation is ${gpuName} from ${topOffer.providerName} at $${topOffer.pricePerHour.toFixed(3)}/hr. Ask me about any offer, pricing, or specifications. [QUERY_READY]`;
+    }
+    return "[NOVA_INIT] I'm Nova, your compute copilot. I can explain GPU recommendations or help estimate costs. [QUERY_READY]";
+  };
+
   const [messages, setMessages] = useState<{ role: 'user' | 'model'; text: string }[]>([
-    { role: 'model', text: "[NOVA_INIT] I'm Nova, your compute copilot. I can explain GPU recommendations or help estimate costs. [QUERY_READY]" }
+    { role: 'model', text: getInitialMessage() }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -41,11 +54,59 @@ const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences }) => {
     try {
       const ai = new GoogleGenAI({ apiKey });
       
+      // Build comprehensive context with all results data
+      const offersSummary = offers.map((offer, idx) => {
+        const gpu = gpuSpecs[offer.gpuId];
+        return {
+          rank: idx + 1,
+          provider: offer.providerName,
+          gpuModel: gpu?.name || offer.gpuId,
+          gpuId: offer.gpuId,
+          pricePerHour: offer.pricePerHour,
+          region: offer.region,
+          commitment: offer.commitment,
+          url: offer.url,
+          isVerified: offer.isVerified || false,
+          specs: gpu ? {
+            vram: gpu.vram,
+            fp16Tflops: gpu.fp16Tflops,
+            tier: gpu.tier,
+          } : null,
+        };
+      });
+
+      // Build GPU specs summary
+      const gpuSpecsSummary = Object.entries(gpuSpecs).map(([model, specs]) => ({
+        model,
+        name: specs.name,
+        vram: specs.vram,
+        fp16Tflops: specs.fp16Tflops,
+        tier: specs.tier,
+      }));
+
       const context = `
-        User Preferences: ${JSON.stringify(preferences)}
-        System Recommendation: ${JSON.stringify(recommendation)}
-        Role: You are an expert cloud infrastructure engineer helping a founder choose GPUs.
-        Task: Answer the user's question concisely based on the context above.
+You are Nova, an expert AI compute copilot for Computra, a GPU marketplace platform.
+
+CURRENT RESULTS CONTEXT:
+- Recommended GPU Tier: ${recommendation.tier}
+- Total Offers Found: ${offers.length}
+- User Preferences: ${JSON.stringify(preferences, null, 2)}
+
+AVAILABLE OFFERS (ranked by relevance):
+${JSON.stringify(offersSummary, null, 2)}
+
+GPU SPECIFICATIONS DATABASE:
+${JSON.stringify(gpuSpecsSummary, null, 2)}
+
+SYSTEM RECOMMENDATION:
+${JSON.stringify(recommendation, null, 2)}
+
+INSTRUCTIONS:
+- You have full visibility into all the offers shown to the user
+- You can reference specific offers by rank, provider, or GPU model
+- You can compare offers, explain pricing, or help choose between options
+- Be concise, technical but accessible, and reference specific data when relevant
+- If asked about a specific offer, use the exact data from the offers list above
       `;
 
       const response = await ai.models.generateContent({
@@ -54,7 +115,7 @@ const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences }) => {
             { role: 'user', parts: [{ text: context + "\n\nUser Question: " + userMsg }] }
         ],
         config: {
-            systemInstruction: "You are a helpful, concise AI assistant for a GPU pricing comparison tool called Computra."
+            systemInstruction: "You are Nova, a helpful and knowledgeable AI assistant for Computra. You have full access to the user's search results, offers, and GPU specifications. Answer questions based on the actual data provided, referencing specific offers, prices, and specs when relevant."
         }
       });
 

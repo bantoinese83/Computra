@@ -365,7 +365,12 @@ const Results: React.FC = () => {
 
       {/* Gemini Assistant Integration */}
       {recommendation && (
-        <GeminiAssistant recommendation={recommendation} preferences={prefs} />
+        <GeminiAssistant 
+          recommendation={recommendation} 
+          preferences={prefs}
+          offers={offers}
+          gpuSpecs={gpuSpecs}
+        />
       )}
     </div>
   );
