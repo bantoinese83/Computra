@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Icon } from './Icon';
 import { GoogleGenAI } from "@google/genai";
 import { RecommendationResult, UserPreferences, ProviderOffer, GpuSpec } from '../types';
@@ -204,7 +205,65 @@ INSTRUCTIONS:
                       : 'bg-surface border border-border text-text-muted'
                   }`}
                 >
-                  {msg.text}
+                  {msg.role === 'model' ? (
+                    <ReactMarkdown
+                      components={{
+                        // Headings
+                        h1: ({ children }) => <h1 className="text-white font-bold font-mono uppercase tracking-wide text-base mb-2 mt-3">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-white font-bold font-mono uppercase tracking-wide text-sm mb-2 mt-3">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-white font-bold font-mono uppercase tracking-wide text-sm mb-2 mt-3">{children}</h3>,
+                        // Paragraphs
+                        p: ({ children }) => <p className="text-text-muted leading-relaxed my-2">{children}</p>,
+                        // Strong/Bold
+                        strong: ({ children }) => <strong className="text-ice-cyan font-bold">{children}</strong>,
+                        // Code blocks
+                        code: ({ className, children, ...props }) => {
+                          const isInline = !className;
+                          if (isInline) {
+                            return (
+                              <code className="text-ice-cyan bg-surface-light px-1.5 py-0.5 rounded text-xs font-mono" {...props}>
+                                {children}
+                              </code>
+                            );
+                          }
+                          return (
+                            <pre className="bg-surface-light border border-border p-3 rounded overflow-x-auto my-2">
+                              <code className="text-ice-cyan text-xs font-mono block" {...props}>
+                                {children}
+                              </code>
+                            </pre>
+                          );
+                        },
+                        // Links
+                        a: ({ href, children }) => (
+                          <a 
+                            href={href} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-ice-cyan underline hover:text-ice-cyan-bright transition-colors"
+                          >
+                            {children}
+                          </a>
+                        ),
+                        // Lists
+                        ul: ({ children }) => <ul className="text-text-muted my-2 list-disc pl-5 space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="text-text-muted my-2 list-decimal pl-5 space-y-1">{children}</ol>,
+                        li: ({ children }) => <li className="my-1">{children}</li>,
+                        // Blockquotes
+                        blockquote: ({ children }) => (
+                          <blockquote className="border-l-2 border-ice-cyan pl-4 italic text-text-muted my-2">
+                            {children}
+                          </blockquote>
+                        ),
+                        // Horizontal rule
+                        hr: () => <hr className="border-border my-4" />,
+                      }}
+                    >
+                      {msg.text}
+                    </ReactMarkdown>
+                  ) : (
+                    <span>{msg.text}</span>
+                  )}
                 </div>
               </div>
             ))}
