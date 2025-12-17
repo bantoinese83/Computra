@@ -4,7 +4,14 @@
 
 @layer base {
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+    background-color: #030303;
+    color: #a1a1aa;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    color: #ffffff;
   }
 }
 
@@ -16,6 +23,15 @@
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  
+  /* Cyber glow effect */
+  .cyber-glow {
+    box-shadow: 0 0 10px rgba(165, 243, 252, 0.3), 0 0 20px rgba(165, 243, 252, 0.1);
+  }
+  
+  .cyber-glow-strong {
+    box-shadow: 0 0 20px rgba(165, 243, 252, 0.5), 0 0 40px rgba(165, 243, 252, 0.2);
   }
 }
 

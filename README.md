@@ -55,6 +55,18 @@ computra/
 └── knip.json               # Knip configuration
 ```
 
+## ⚠️ SECURITY WARNING
+
+**IMPORTANT**: The current implementation exposes your API key in the client-side JavaScript bundle. This is a **critical security risk** for production use.
+
+**Before deploying to production:**
+1. Read [`SECURITY.md`](./SECURITY.md) for complete security guidelines
+2. Implement a backend proxy (see [`api/README.md`](./api/README.md))
+3. Never commit `.env` files to git
+4. Rotate your API key if it's been exposed
+
+**For development**: The current setup works but is insecure. Use a backend proxy for any public deployment.
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -67,7 +79,7 @@ computra/
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/bantoinese83/Computra.git
    cd computra
    ```
 
@@ -78,10 +90,17 @@ computra/
 
 3. **Set up environment variables**
    
-   Create a `.env` file in the root directory:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
+   Copy the example environment file:
+   ```bash
+   cp .env.example .env
    ```
+   
+   Then edit `.env` and add your actual API key:
+   ```env
+   GEMINI_API_KEY=your_actual_api_key_here
+   ```
+   
+   ⚠️ **Never commit `.env` to git!** It's already in `.gitignore`.
 
 4. **Start the development server**
    ```bash
@@ -117,7 +136,9 @@ The app can be deployed to any static hosting service:
 - **Cloudflare Pages**: Connect your Git repository
 - **AWS S3 + CloudFront**: Upload `dist/` folder
 
-Make sure to set the `GEMINI_API_KEY` environment variable in your hosting platform's environment settings.
+⚠️ **SECURITY**: Before deploying, implement a backend proxy to keep your API key secure. See [`SECURITY.md`](./SECURITY.md) and [`api/README.md`](./api/README.md) for details.
+
+If deploying without a backend proxy (NOT RECOMMENDED for production), set the `GEMINI_API_KEY` environment variable in your hosting platform's environment settings. **Note**: This will still expose your key in the client bundle.
 
 ## 🏛️ Architecture
 

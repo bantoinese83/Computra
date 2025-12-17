@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Loader2, Sparkles, Bot } from 'lucide-react';
+import { Icon } from './Icon';
 import { GoogleGenAI } from "@google/genai";
 import { RecommendationResult, UserPreferences } from '../types';
+import { LIMITS, ICON_SIZES, SPACING, PERCENTAGE } from '../constants';
 import { logger } from '../utils/logger';
+import LoadingAnimation from './LoadingAnimation';
 
 interface Props {
   recommendation: RecommendationResult;
@@ -12,7 +14,7 @@ interface Props {
 const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model'; text: string }[]>([
-    { role: 'model', text: "Hi! I'm your Compute Expert AI. I can explain why these GPUs were recommended or help you estimate costs. Ask me anything!" }
+    { role: 'model', text: "[NOVA_INIT] I'm Nova, your compute copilot. I can explain GPU recommendations or help estimate costs. [QUERY_READY]" }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -61,10 +63,10 @@ const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences }) => {
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error('Failed to generate chat response from Gemini', err, {
-        userMessage: userMsg.substring(0, 100), // Log first 100 chars for context
+        userMessage: userMsg.substring(0, LIMITS.LOG_MESSAGE_MAX_LENGTH),
         hasRecommendation: !!recommendation,
       });
-      setMessages(prev => [...prev, { role: 'model', text: "Sorry, I'm having trouble connecting right now. Please try again in a moment." }]);
+      setMessages(prev => [...prev, { role: 'model', text: "[ERROR] Connection failed. [RETRY] Please try again." }]);
     } finally {
       setIsLoading(false);
     }
@@ -90,51 +92,55 @@ const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences }) => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-8 right-8 bg-white hover:bg-slate-50 text-indigo-600 p-4 pr-6 rounded-full shadow-2xl hover:shadow-indigo-500/20 transition-all hover:scale-105 z-50 flex items-center gap-3 border border-indigo-100 group animate-in zoom-in duration-300"
+          className="fixed bottom-8 right-8 border border-ice-cyan bg-surface text-ice-cyan p-4 pr-6 hover:bg-surface-light transition-all hover:cyber-glow z-50 flex items-center gap-3 group animate-in zoom-in duration-300 font-mono"
         >
-          <div className="bg-indigo-600 text-white p-2 rounded-full shadow-md group-hover:rotate-12 transition-transform">
-             <Sparkles size={20} />
+          <div className="border border-ice-cyan bg-surface-light p-2 group-hover:rotate-12 transition-transform">
+            <img
+              src="/robotic-icon.svg"
+              alt="Nova compute copilot"
+              className="h-7 w-7"
+            />
           </div>
-          <span className="font-bold text-sm tracking-wide">Ask AI Expert</span>
+          <span className="font-bold text-sm tracking-wide">[ASK_NOVA]</span>
         </button>
       )}
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-8 right-8 w-[24rem] h-[32rem] bg-white rounded-3xl shadow-2xl flex flex-col z-50 border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-10 zoom-in-95 duration-300 ring-1 ring-slate-900/5">
+        <div className="fixed bottom-8 right-8 w-[24rem] h-[32rem] bg-surface border border-border flex flex-col z-50 overflow-hidden animate-in fade-in slide-in-from-bottom-10 zoom-in-95 duration-300 cyber-glow">
           
           {/* Header */}
-          <div className="bg-white/80 backdrop-blur-md p-4 flex justify-between items-center border-b border-slate-100 absolute w-full top-0 z-10">
+          <div className="bg-surface-light p-4 flex justify-between items-center border-b border-border absolute w-full top-0 z-10">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                <Bot size={18} />
+              <div className="w-8 h-8 border border-ice-cyan flex items-center justify-center">
+                <Icon name="bot" size={ICON_SIZES.LG} className="text-ice-cyan" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-800 text-sm">Compute Expert</h3>
+                <h3 className="font-bold text-white text-sm font-mono">[NOVA]</h3>
                 <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Online</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-ice-cyan animate-pulse"></span>
+                    <span className="text-[10px] font-mono text-ice-cyan uppercase tracking-wider">[ONLINE]</span>
                 </div>
               </div>
             </div>
             <button 
               onClick={() => setIsOpen(false)} 
-              className="hover:bg-slate-100 p-2 rounded-full transition-colors text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="hover:bg-surface p-2 transition-colors text-ice-cyan focus:outline-none focus:ring-2 focus:ring-ice-cyan focus:ring-offset-2 focus:ring-offset-void"
               aria-label="Close chat"
             >
-              <X size={18} />
+              <Icon name="close" size={ICON_SIZES.LG} />
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-5 pt-20 space-y-6 bg-slate-50 scrollbar-thin scrollbar-thumb-slate-200">
+          <div className="flex-1 overflow-y-auto p-5 pt-20 space-y-6 bg-void scrollbar-thin scrollbar-thumb-border">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div 
-                  className={`max-w-[85%] px-5 py-3.5 text-sm leading-relaxed shadow-sm ${
+                  className={`max-w-[85%] px-5 py-3.5 text-sm leading-relaxed ${
                     msg.role === 'user' 
-                      ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-sm' 
-                      : 'bg-white border border-slate-100 text-slate-600 rounded-2xl rounded-tl-sm'
+                      ? 'bg-surface-light border border-ice-cyan text-ice-cyan' 
+                      : 'bg-surface border border-border text-text-muted'
                   }`}
                 >
                   {msg.text}
@@ -143,9 +149,9 @@ const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences }) => {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2">
-                  <Loader2 className="animate-spin text-indigo-600" size={16} />
-                  <span className="text-xs text-slate-400 font-medium">Thinking...</span>
+                <div className="bg-surface border border-border p-4 flex items-center gap-3">
+                  <LoadingAnimation size={40} />
+                  <span className="text-xs text-text-muted font-mono">[PROCESSING]</span>
                 </div>
               </div>
             )}
@@ -153,7 +159,7 @@ const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences }) => {
           </div>
 
           {/* Input */}
-          <div className="p-4 bg-white border-t border-slate-100">
+          <div className="p-4 bg-surface-light border-t border-border">
             <div className="relative">
               <input
                 type="text"
@@ -165,17 +171,17 @@ const GeminiAssistant: React.FC<Props> = ({ recommendation, preferences }) => {
                     handleSend();
                   }
                 }}
-                placeholder="Type your question..."
-                className="w-full bg-slate-100 border-transparent rounded-2xl pl-4 pr-12 py-3.5 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
+                placeholder="[INPUT_QUERY]"
+                className="w-full bg-surface border border-border pl-4 pr-12 py-3.5 text-sm text-white focus:border-ice-cyan focus:ring-2 focus:ring-ice-cyan focus:ring-offset-2 focus:ring-offset-surface-light transition-all outline-none font-mono placeholder:text-text-muted"
                 aria-label="Chat input"
                 disabled={isLoading}
               />
               <button 
                 onClick={handleSend}
                 disabled={isLoading || !inputValue.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white p-2 rounded-xl transition-colors shadow-sm"
+                className="absolute right-2 top-1/2 -translate-y-1/2 border border-ice-cyan bg-surface text-ice-cyan hover:bg-surface-light disabled:border-border disabled:text-text-muted p-2 transition-colors"
               >
-                <Send size={16} />
+                <Icon name="send" size={ICON_SIZES.MD} />
               </button>
             </div>
           </div>

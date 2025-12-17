@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { generatePrompt } from '../utils/engine';
 import { logger } from '../utils/logger';
+import { getCachedResults, setCachedResults } from '../utils/cache';
 import {
   Commitment,
   GpuSpec,
@@ -10,7 +11,7 @@ import {
   RecommendationResult,
   UserPreferences,
 } from '../types';
-import { GPUS } from '../constants';
+import { GPUS, API_CONFIG } from '../constants';
 
 interface UseGpuRecommendationsResult {
   recommendation: RecommendationResult | null;
@@ -44,6 +45,18 @@ export function useGpuRecommendations(prefs: UserPreferences): UseGpuRecommendat
         return;
       }
 
+      // Check cache first
+      const cached = getCachedResults(prefs);
+      if (cached) {
+        setRecommendation(cached.recommendation);
+        setOffers(cached.offers);
+        setGpuSpecs(cached.gpuSpecs);
+        setGroundingSources(cached.groundingSources);
+        setIsLoading(false);
+        setError(null);
+        return; // Use cached data, skip API call
+      }
+
       const apiKey = process.env.API_KEY;
       if (!apiKey) {
         setIsLoading(false);
@@ -63,7 +76,7 @@ export function useGpuRecommendations(prefs: UserPreferences): UseGpuRecommendat
           contents: prompt,
           config: {
             tools: [{ googleSearch: {} }],
-            temperature: 0.2,
+            temperature: API_CONFIG.GEMINI_TEMPERATURE,
           },
         });
 
@@ -78,8 +91,18 @@ export function useGpuRecommendations(prefs: UserPreferences): UseGpuRecommendat
           .map((c: any) => ({ title: c.web.title, uri: c.web.uri }));
         setGroundingSources(sources);
 
-        // Parse structured blocks
-        parseResponse(text);
+        // Parse structured blocks and cache results
+        const parsedData = parseResponse(text, sources);
+        
+        // Cache the results if we have valid data
+        if (parsedData.recommendation && parsedData.offers.length > 0) {
+          setCachedResults(prefs, {
+            recommendation: parsedData.recommendation,
+            offers: parsedData.offers,
+            gpuSpecs: parsedData.gpuSpecs,
+            groundingSources: sources,
+          });
+        }
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         logger.error('Failed to fetch GPU recommendations from Gemini API', error, {
@@ -97,24 +120,34 @@ export function useGpuRecommendations(prefs: UserPreferences): UseGpuRecommendat
       }
     };
 
-    const parseResponse = (text: string) => {
+    const parseResponse = (
+      text: string,
+      sources: { title: string; uri: string }[],
+    ): {
+      recommendation: RecommendationResult | null;
+      offers: ProviderOffer[];
+      gpuSpecs: Record<string, GpuSpec>;
+    } => {
       try {
+        let parsedRecommendation: RecommendationResult | null = null;
+
         // Recommendation block
         const recBlockMatch = text.match(/BLOCK_REC_START([\s\S]*?)BLOCK_REC_END/);
         if (recBlockMatch) {
           const lines = recBlockMatch[1].trim().split('\n').filter((l) => l.trim());
-          if (lines.length >= 4) {
+          if (lines.length >= API_CONFIG.MIN_RECOMMENDATION_LINES) {
             const tier = lines[0].trim() as GpuTier;
             const suggestedGpus = lines[1].split(',').map((s) => s.trim().toLowerCase());
             const explanation = lines[2].trim();
             const priceRange = lines[3].trim();
 
-            setRecommendation({
+            parsedRecommendation = {
               tier,
               suggestedGpus,
               explanation,
               priceRange,
-            });
+            };
+            setRecommendation(parsedRecommendation);
           }
         }
 
@@ -127,7 +160,7 @@ export function useGpuRecommendations(prefs: UserPreferences): UseGpuRecommendat
           lines.forEach((line) => {
             if (!line.includes('|')) return;
             const parts = line.split('|').map((s) => s.trim());
-            if (parts.length >= 4) {
+            if (parts.length >= API_CONFIG.MIN_SPEC_LINES) {
               const id = parts[0].toLowerCase();
               newSpecs[id] = {
                 id,
@@ -150,7 +183,7 @@ export function useGpuRecommendations(prefs: UserPreferences): UseGpuRecommendat
           lines.forEach((line, idx) => {
             if (!line.includes('|')) return;
             const parts = line.split('|').map((p) => p.trim());
-            if (parts.length >= 6) {
+            if (parts.length >= API_CONFIG.MIN_OFFER_LINES) {
               const gpuIdRaw = parts[1].toLowerCase();
               const knownSpec = newSpecs[gpuIdRaw] || GPUS['l4'];
               const gpuId = knownSpec.id;
@@ -169,6 +202,12 @@ export function useGpuRecommendations(prefs: UserPreferences): UseGpuRecommendat
           });
         }
         setOffers(parsedOffers);
+
+        return {
+          recommendation: parsedRecommendation,
+          offers: parsedOffers,
+          gpuSpecs: newSpecs,
+        };
       } catch (e) {
         const error = e instanceof Error ? e : new Error(String(e));
         logger.error('Failed to parse Gemini API response', error, {

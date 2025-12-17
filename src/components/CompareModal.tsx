@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { Icon } from './Icon';
 import { ProviderOffer, GpuSpec } from '../types';
+import { ICON_SIZES, LIMITS } from '../constants';
 
 interface Props {
   offers: ProviderOffer[];
@@ -45,87 +46,87 @@ const CompareModal: React.FC<Props> = ({ offers, gpuSpecs, isOpen, onClose }) =>
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-void/80 backdrop-blur-sm animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-labelledby="compare-modal-title"
     >
       <div 
         ref={modalRef}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        className="bg-surface border border-border w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 cyber-glow"
       >
-        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-          <h3 id="compare-modal-title" className="font-bold text-lg text-slate-900">Compare Offers</h3>
+        <div className="p-4 border-b border-border flex justify-between items-center bg-surface-light">
+          <h3 id="compare-modal-title" className="font-bold text-lg text-white font-mono">[COMPARE]</h3>
           <button 
             ref={closeButtonRef}
             onClick={onClose} 
-            className="p-2 hover:bg-slate-200 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="p-2 hover:bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-ice-cyan focus:ring-offset-2 focus:ring-offset-void"
             aria-label="Close comparison"
           >
-            <X size={20} className="text-slate-500" />
+            <Icon name="close" size={ICON_SIZES.XL} className="text-ice-cyan" />
           </button>
         </div>
         
-        <div className="overflow-auto p-6 scrollbar-hide">
+        <div className="overflow-auto p-6 scrollbar-hide bg-void">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr>
-                <th className="p-4 border-b-2 border-slate-100 min-w-[150px] sticky left-0 bg-white z-10 shadow-sm">Detail</th>
+                <th className="p-4 border-b-2 border-border min-w-[150px] sticky left-0 bg-surface z-10 font-mono text-ice-cyan text-xs uppercase">[DETAIL]</th>
                 {offers.map(offer => {
                    const spec = gpuSpecs[offer.gpuId] || { name: offer.gpuId, vram: 0, fp16Tflops: 0 };
                    return (
-                      <th key={offer.id} className="p-4 border-b-2 border-slate-100 min-w-[200px]">
-                        <div className="font-bold text-slate-900">{offer.providerName}</div>
-                        <div className="text-xs text-slate-500 font-normal">{spec.name}</div>
+                      <th key={offer.id} className="p-4 border-b-2 border-border min-w-[200px]">
+                        <div className="font-bold text-white">{offer.providerName}</div>
+                        <div className="text-xs text-text-muted font-mono">{spec.name}</div>
                       </th>
                    );
                 })}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border">
               <tr>
-                <td className="p-4 font-semibold text-slate-600 bg-slate-50/50 sticky left-0 shadow-sm">Price per hour</td>
+                <td className="p-4 font-semibold text-text-muted bg-surface-light sticky left-0 font-mono text-xs uppercase">[PRICE/HR]</td>
                 {offers.map(offer => (
-                  <td key={offer.id} className="p-4 font-bold text-green-600">
-                    ${offer.pricePerHour.toFixed(3)}
+                  <td key={offer.id} className="p-4 font-bold text-ice-cyan font-mono">
+                    ${offer.pricePerHour.toFixed(LIMITS.PRICE_DECIMAL_PLACES)}
                   </td>
                 ))}
               </tr>
               <tr>
-                <td className="p-4 font-semibold text-slate-600 bg-slate-50/50 sticky left-0 shadow-sm">Memory (GB)</td>
+                <td className="p-4 font-semibold text-text-muted bg-surface-light sticky left-0 font-mono text-xs uppercase">[MEMORY]</td>
                 {offers.map(offer => {
                    const spec = gpuSpecs[offer.gpuId];
                    return (
-                      <td key={offer.id} className="p-4">
-                        {spec ? `${spec.vram} GB` : '-'}
+                      <td key={offer.id} className="p-4 text-white font-mono">
+                        {spec ? `${spec.vram}GB` : '-'}
                       </td>
                    );
                 })}
               </tr>
               <tr>
-                <td className="p-4 font-semibold text-slate-600 bg-slate-50/50 sticky left-0 shadow-sm">Speed score</td>
+                <td className="p-4 font-semibold text-text-muted bg-surface-light sticky left-0 font-mono text-xs uppercase">[TFLOPS]</td>
                 {offers.map(offer => {
                    const spec = gpuSpecs[offer.gpuId];
                    return (
-                      <td key={offer.id} className="p-4">
+                      <td key={offer.id} className="p-4 text-white font-mono">
                         {spec ? spec.fp16Tflops : '-'}
                       </td>
                    );
                 })}
               </tr>
               <tr>
-                <td className="p-4 font-semibold text-slate-600 bg-slate-50/50 sticky left-0 shadow-sm">Region</td>
+                <td className="p-4 font-semibold text-text-muted bg-surface-light sticky left-0 font-mono text-xs uppercase">[REGION]</td>
                 {offers.map(offer => (
-                  <td key={offer.id} className="p-4">
+                  <td key={offer.id} className="p-4 text-white font-mono uppercase">
                     {offer.region}
                   </td>
                 ))}
               </tr>
               <tr>
-                <td className="p-4 font-semibold text-slate-600 bg-slate-50/50 sticky left-0 shadow-sm">Commitment</td>
+                <td className="p-4 font-semibold text-text-muted bg-surface-light sticky left-0 font-mono text-xs uppercase">[COMMITMENT]</td>
                 {offers.map(offer => (
-                  <td key={offer.id} className="p-4 capitalize">
-                    {offer.commitment.toLowerCase()}
+                  <td key={offer.id} className="p-4 text-white font-mono uppercase">
+                    {offer.commitment}
                   </td>
                 ))}
               </tr>

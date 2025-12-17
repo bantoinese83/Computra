@@ -4,7 +4,53 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Computra - AI Compute Finder</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta
+      name="description"
+      content="Computra helps you quickly find the right GPU cloud provider for your AI workloads. Answer a few questions, get a clear recommendation, and compare live offers from verified providers."
+    />
+    <meta name="robots" content="index,follow" />
+    <meta name="theme-color" content="#0f172a" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Computra - AI Compute Decision Engine" />
+    <meta
+      property="og:description"
+      content="Answer a short questionnaire and let Computra recommend the best GPUs and cloud providers for your AI workload."
+    />
+    <meta property="og:image" content="/computra-logo.svg" />
+    <meta property="og:url" content="https://computra.app" />
+    <meta property="og:site_name" content="Computra" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Computra - AI Compute Decision Engine" />
+    <meta
+      name="twitter:description"
+      content="Find the optimal GPU and cloud provider for your AI workloads with a simple, guided questionnaire."
+    />
+    <meta name="twitter:image" content="/computra-logo.svg" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Computra",
+        "url": "https://computra.app",
+        "description": "Computra is an AI compute decision engine and marketplace that helps you choose the right GPU and cloud provider for your AI workloads.",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any",
+        "image": "https://computra.app/computra-logo.svg"
+      }
+    </script>
+
+    <link rel="icon" type="image/svg+xml" href="/computra-logo.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script type="importmap">
 {
   "imports": {
@@ -18,7 +64,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-50 text-slate-900 antialiased">
+  <body class="bg-void text-text-muted antialiased">
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
