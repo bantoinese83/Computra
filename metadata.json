@@ -1,0 +1,5 @@
+{
+  "name": "Computra",
+  "description": "The Skyscanner for AI Compute. A rule-based MVP to find the best GPU prices based on your workload.",
+  "requestFramePermissions": []
+}
